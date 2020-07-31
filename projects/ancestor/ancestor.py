@@ -82,7 +82,7 @@ def earliest_ancestor(ancestors, starting_node):
     # Break out ancestors, reverse orders, populate vertex and edges.
     aGraph = Graph()
 
-    # create vertex set
+    # find vertexes to add
     vertex = set()
     res_path = []
     result = -1
@@ -93,18 +93,15 @@ def earliest_ancestor(ancestors, starting_node):
     for v in vertex:
         aGraph.add_vertex(v)
 
-    # reverse order of edges, child leads to parent
-
+    # reverse order of edges, child leads to parent, add edges
     for ancestor in ancestors:
         aGraph.add_edge(ancestor[1], ancestor[0])
     # find eldest ancestors
 
     elders = aGraph.find_ancestors(starting_node)
-    # print("elders ", elders)
 
     for elder in elders:
         new_path = aGraph.dfs(starting_node, elder)
-        # print(elder, len(res_path))
         if len(new_path) > len(res_path):
             res_path = new_path
             result = new_path[-1]
@@ -113,9 +110,4 @@ def earliest_ancestor(ancestors, starting_node):
             res_path = new_path
             result = new_path[-1]
 
-    # print(aGraph.dfs(starting_node, elder))
     return result
-
-    # compare paths
-    # return proper response
-# print(earliest_ancestor(test_ancestors, 11))
