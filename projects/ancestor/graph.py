@@ -102,13 +102,12 @@ class Graph:
         """
         # Check if visited
         if vertex not in visited:
-            # print(vertex)
+            print(vertex)
             visited.add(vertex)
         # Base case / no neighbors
             neighbors = self.get_neighbors(vertex)
             if len(neighbors) == 0:
-                print(vertex)
-                return vertex
+                return visited
 
         # if neighbors, iterate over them and recurse for each
             for neighbor in neighbors:
@@ -203,6 +202,23 @@ class Graph:
                     # print(result)
                     return result
         return None
+
+    def find_ancestors(self, starting_vertex):
+        s = Stack()
+        result = set()
+        s.push(starting_vertex)
+        visited = set()
+        while s.size() > 0:
+            current_node = s.pop()
+            if current_node not in visited:
+                visited.add(current_node)
+                neighbors = self.get_neighbors(current_node)
+                if len(neighbors) == 0 and current_node != starting_vertex:
+                    result.add(current_node)
+
+                for neighbor in neighbors:
+                    s.push(neighbor)
+        return result
 
 
 if __name__ == '__main__':
