@@ -85,7 +85,6 @@ def earliest_ancestor(ancestors, starting_node):
     # find vertexes to add
     vertex = set()
     res_path = []
-    result = -1
     for ancestor in ancestors:
         for v in ancestor:
             vertex.add(v)
@@ -99,15 +98,16 @@ def earliest_ancestor(ancestors, starting_node):
     # find eldest ancestors
 
     elders = aGraph.find_ancestors(starting_node)
+    # no parents returns -1
+    if len(elders) == 0:
+        return -1
 
     for elder in elders:
         new_path = aGraph.dfs(starting_node, elder)
         if len(new_path) > len(res_path):
             res_path = new_path
-            result = new_path[-1]
 
         if len(new_path) == len(res_path) and new_path[-1] < res_path[-1]:
             res_path = new_path
-            result = new_path[-1]
 
-    return result
+    return res_path[-1]
