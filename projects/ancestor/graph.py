@@ -203,6 +203,23 @@ class Graph:
                     return result
         return None
 
+    def find_ancestors(self, starting_vertex):
+        s = Stack()
+        result = set()
+        s.push(starting_vertex)
+        visited = set()
+        while s.size() > 0:
+            current_node = s.pop()
+            if current_node not in visited:
+                visited.add(current_node)
+                neighbors = self.get_neighbors(current_node)
+                if len(neighbors) == 0 and current_node != starting_vertex:
+                    result.add(current_node)
+
+                for neighbor in neighbors:
+                    s.push(neighbor)
+        return result
+
 
 if __name__ == '__main__':
     graph = Graph()  # Instantiate your graph
