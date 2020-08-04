@@ -1,29 +1,10 @@
-# from projects.adventure.room import Room
 from room import Room
-# from projects.adventure.world import World
 from world import World
 
 from player import Player
 
 import random
 from ast import literal_eval
-
-
-class Stack():
-    def __init__(self):
-        self.stack = []
-
-    def push(self, value):
-        self.stack.append(value)
-
-    def pop(self):
-        if self.size() > 0:
-            return self.stack.pop()
-        else:
-            return None
-
-    def size(self):
-        return len(self.stack)
 
 
 class Queue():
@@ -96,7 +77,6 @@ class Pathfinder:
             current_path = bfs_q.dequeue()
             current_room = current_path[-1]
 
-            # print(self.rooms[current_room])
             for key in self.rooms[current_room]:
                 if self.rooms[current_room][key] == destination_room:
                     bfs_traversal.append(key)
@@ -107,16 +87,6 @@ class Pathfinder:
                     next_path = current_path[:-1]
                     bfs_q.enqueue(next_path)
 
-            # if current_room == destination_room:
-            #     return bfs_traversal
-            # if current_room not in bfs_visited:
-            #     bfs_visited.add(current_room)
-            #     neighbors = self.get_exits(current_room)
-            #     for neighbor in neighbors:
-            #         neighbor_path = current_path.copy()
-            #         neighbor_path.append(neighbor)
-            #         q.enqueue(neighbor_path)
-
     def find_last_unknown(self, path, traversal):
         new_path = path[:-1]
         rev_traversal = [self.reverse_direction(traversal[-1])]
@@ -126,7 +96,6 @@ class Pathfinder:
             curr_room = new_path[-1]
             exit_direction = self.unknown_exits(curr_room)
             if exit_direction is not None:
-                # print([item.id for item in new_path])
                 return (new_path, rev_traversal, exit_direction)
             new_path = new_path[:-1]
             rev_traversal.append(self.reverse_direction(prev_traversal[-1]))
@@ -173,7 +142,6 @@ class Pathfinder:
                 prev_direction = next_exit
                 self.player.travel(next_exit)
                 next_room = self.player.current_room
-                # self.add_exit(prev_room, next_exit, next_room)
 
                 next_path = curr_path.copy()
                 next_path.append(next_room)
@@ -184,18 +152,6 @@ class Pathfinder:
             if next_exit == None:
                 prev_direction = None
                 print(f"reached end of fork at {self.player.current_room.id}")
-
-                # new_path = self.find_last_unknown(
-                #     curr_path, traversal)  # returns path to return to, traversal to get there, direction of exit
-
-                # if new_path is not None:
-
-                #     last_unknown = new_path[0][-1]
-                #     traversal.extend(new_path[1])
-                #     print("return path ", )
-                #     print("current traversal ", traversal)
-                #     self.player.current_room = last_unknown
-                #     q.enqueue(new_path[0])
 
                 last_unknown = self.find_last_unknown(curr_path, traversal)
                 if last_unknown is not None:
@@ -214,15 +170,6 @@ class Pathfinder:
 
                     q.enqueue(new_path)
 
-                # print("exits from curr_room ",
-                #       curr_room, self.rooms[curr_room])
-                # print('exits from target room ',
-                #       target_room, self.rooms[target_room])
-                # for key in self.rooms[target_room]:
-                #     print(key)
-                #     print(self.rooms[target_room][key].id)
-
-                # print(self.bfs(curr_room, curr_path, target_room))
         print(traversal)
         return traversal
 
