@@ -64,6 +64,18 @@ class Pathfinder:
     def get_exits(self, room_id):
         return self.rooms[room_id]
 
+    def reverse_direction(self, prev_direction):
+        rev_direction = ''
+        if prev_direction == 'n':
+            rev_direction = 's'
+        if prev_direction == 'e':
+            rev_direction = 'w'
+        if prev_direction == 's':
+            rev_direction = 'n'
+        if prev_direction == 'w':
+            rev_direction = 'e'
+        return rev_direction
+
     '''
     helper function - returns first exit without a room on the other end
     '''
@@ -73,20 +85,52 @@ class Pathfinder:
             if self.rooms[curr_room][direction] == '?':
                 return direction
 
+    def bfs(self, start_room, curr_path, destination_room):
+        # print(self.rooms)
+        bfs_q = Queue()
+        bfs_path = curr_path.copy()
+        bfs_traversal = []
+
+        bfs_q.enqueue(bfs_path)
+        while bfs_q.size() > 0:
+            current_path = bfs_q.dequeue()
+            current_room = current_path[-1]
+
+            # print(self.rooms[current_room])
+            for key in self.rooms[current_room]:
+                if self.rooms[current_room][key] == destination_room:
+                    bfs_traversal.append(key)
+                    print(bfs_traversal)
+                    return bfs_traversal
+                if self.rooms[current_room][key] == current_path[-2]:
+                    bfs_traversal.append(key)
+                    next_path = current_path[:-1]
+                    bfs_q.enqueue(next_path)
+
+            # if current_room == destination_room:
+            #     return bfs_traversal
+            # if current_room not in bfs_visited:
+            #     bfs_visited.add(current_room)
+            #     neighbors = self.get_exits(current_room)
+            #     for neighbor in neighbors:
+            #         neighbor_path = current_path.copy()
+            #         neighbor_path.append(neighbor)
+            #         q.enqueue(neighbor_path)
+
     def find_last_unknown(self, path, traversal):
-        prev_traversal = traversal
-        new_traversal = []
+        new_path = path[:-1]
+        rev_traversal = [self.reverse_direction(traversal[-1])]
+        prev_traversal = traversal[:-1]
 
-        s = Stack()
-        for room in path:
-            s.push(room)
-
-        while s.size() > 0:
-            check_room = s.pop()
-            print(check_room)
-            next_exit = self.unknown_exits(check_room)
-            if next_exit is not None:
-                new_traversal.append(next_exit)
+        while len(new_path) > 0:
+            curr_room = new_path[-1]
+            exit_direction = self.unknown_exits(curr_room)
+            if exit_direction is not None:
+                # print([item.id for item in new_path])
+                return (new_path, rev_traversal, exit_direction)
+            new_path = new_path[:-1]
+            rev_traversal.append(self.reverse_direction(prev_traversal[-1]))
+            prev_traversal = prev_traversal[:-1]
 
     def wander(self):
         q = Queue()
@@ -96,6 +140,7 @@ class Pathfinder:
         q.enqueue(path)
         prev_room = None
         prev_direction = None
+        next_exit = None
 
         while q.size() > 0:
             curr_path = q.dequeue()
@@ -114,16 +159,9 @@ class Pathfinder:
                         self.add_exit(curr_room, pot_exit, '?')
 
             if prev_room is not None:
-                add_direction = ''
-                if prev_direction == 'n':
-                    add_direction = 's'
-                if prev_direction == 'e':
-                    add_direction = 'w'
-                if prev_direction == 's':
-                    add_direction = 'n'
-                if prev_direction == 'w':
-                    add_direction = 'e'
+                add_direction = self.reverse_direction(prev_direction)
                 self.add_exit(curr_room, add_direction, prev_room)
+                self.add_exit(prev_room, prev_direction, curr_room)
 
             # decide next move
             # are there exits with unknown destinations
@@ -135,17 +173,57 @@ class Pathfinder:
                 prev_direction = next_exit
                 self.player.travel(next_exit)
                 next_room = self.player.current_room
-                self.add_exit(prev_room, next_exit, next_room)
+                # self.add_exit(prev_room, next_exit, next_room)
 
                 next_path = curr_path.copy()
                 next_path.append(next_room)
                 q.enqueue(next_path)
 
-            if next_exit == None:
-                self.find_last_unknown(curr_path[:-1], traversal)
-
             # end of direct path, search backwards to find unknown directions
 
+            if next_exit == None:
+                prev_direction = None
+                print(f"reached end of fork at {self.player.current_room.id}")
+
+                # new_path = self.find_last_unknown(
+                #     curr_path, traversal)  # returns path to return to, traversal to get there, direction of exit
+
+                # if new_path is not None:
+
+                #     last_unknown = new_path[0][-1]
+                #     traversal.extend(new_path[1])
+                #     print("return path ", )
+                #     print("current traversal ", traversal)
+                #     self.player.current_room = last_unknown
+                #     q.enqueue(new_path[0])
+
+                last_unknown = self.find_last_unknown(curr_path, traversal)
+                if last_unknown is not None:
+                    target_room = last_unknown[0][-1]
+                    returned_path = last_unknown[0]
+
+                    return_traversal = self.bfs(
+                        self.player.current_room, curr_path, target_room)
+                    new_path = returned_path
+                    print("returned path ", returned_path)
+                    for move in return_traversal:
+                        self.player.travel(move)
+                    print(
+                        f"move complete, returned to Room {self.player.current_room.id} ")
+                    traversal.extend(return_traversal)
+
+                    q.enqueue(new_path)
+
+                # print("exits from curr_room ",
+                #       curr_room, self.rooms[curr_room])
+                # print('exits from target room ',
+                #       target_room, self.rooms[target_room])
+                # for key in self.rooms[target_room]:
+                #     print(key)
+                #     print(self.rooms[target_room][key].id)
+
+                # print(self.bfs(curr_room, curr_path, target_room))
+        print(traversal)
         return traversal
 
 
@@ -155,10 +233,10 @@ world = World()
 
 # You may uncomment the smaller graphs for development and testing purposes.
 # map_file = "maps/test_line.txt"
-map_file = "maps/test_cross.txt"
+# map_file = "maps/test_cross.txt"
 # map_file = "maps/test_loop.txt"
 # map_file = "maps/test_loop_fork.txt"
-# map_file = "maps/main_maze.txt"
+map_file = "maps/main_maze.txt"
 
 # Loads the map into a dictionary
 room_graph = literal_eval(open(map_file, "r").read())
@@ -171,9 +249,11 @@ player = Player(world.starting_room)
 
 # Fill this out with directions to walk
 # traversal_path = ['n', 'n']
+traversal_path = []
 
 p = Pathfinder(player)
 traversal_path = p.wander()
+# p.wander()
 # start pathfinding at starting room
 
 
