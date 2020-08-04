@@ -30,7 +30,7 @@ class Queue():
 
 
 class Pathfinder:
-    def __init__(self, player, initial_exits):
+    def __init__(self, player):
         self.player = player
         self.starting_room = player.current_room
         self.rooms = {}
@@ -44,25 +44,82 @@ class Pathfinder:
     def get_exits(self, room_id):
         return self.rooms[room_id]
 
+    '''
+    helper function - returns first exit without a room on the other end 
+    '''
+
+    def unknown_exits(self, curr_room):
+        for direction in self.rooms[curr_room]:
+            if self.rooms[curr_room][direction] == '?':
+                return direction
+
     def wander(self):
         q = Queue()
-        q.enqueue(self.starting_room)
         visited = set()
+        path = [self.starting_room]
+        traversal = []
+        q.enqueue(path)
         prev_room = None
-        while q.size > 0:
+        prev_direction = None
 
-            curr_room = q.dequeue()
+        while q.size() > 0:
+            curr_path = q.dequeue()
+            curr_room = curr_path[-1]
             # add to visited, add exits
-            if curr_room not in visited:
-                visited.add(curr_room)
-                possible_exits = curr_room.get_exits()
-                if prev_room is not None:
 
-                    # add exits if not already present
+            if curr_room not in visited:
+
+                visited.add(curr_room)
+                self.add_room(curr_room)
+
+                possible_exits = curr_room.get_exits()
+                # add exits if not already present
                 for pot_exit in possible_exits:
-                    if pot_exit not in curr_room:
+                    if pot_exit not in self.rooms[curr_room]:
                         self.add_exit(curr_room, pot_exit, '?')
 
+            if prev_room is not None:
+                print("prev_direction ", prev_direction)
+                add_direction = ''
+                if prev_direction == 'n':
+                    add_direction = 's'
+                if prev_direction == 'e':
+                    add_direction = 'w'
+                if prev_direction == 's':
+                    add_direction = 'n'
+                if prev_direction == 'w':
+                    add_direction = 'e'
+                self.add_exit(curr_room, add_direction, prev_room)
+
+            # decide next move
+            # are there exits with unknown destinations
+            next_exit = self.unknown_exits(curr_room)
+            print('next_exit ', next_exit)
+            if next_exit is not None:
+                traversal.append(next_exit)
+                # move player object to next room
+                prev_room = self.player.current_room
+                prev_direction = next_exit
+                self.player.travel(next_exit)
+                next_room = self.player.current_room
+                self.add_exit(prev_room, next_exit, next_room)
+
+                next_path = curr_path.copy()
+                next_path.append(next_room)
+                q.enqueue(next_path)
+        return traversal
+
+        # for direction in self.rooms[curr_room]:
+        #     if self.rooms[curr_room][direction] == '?':
+        #         self.player.travel(direction)
+        #         print('player moved to', self.player.current_room)
+        #         traversal.append(direction)
+        #         print("traversal path: ", traversal)
+        #         q.enqueue(self.player.current_room)
+        #         new_path = path.copy()
+        #         new_path.append(self.player.current_room)
+        #         break
+        # print("final traversal ", traversal)
         # choose exit
 
 
@@ -88,11 +145,9 @@ player = Player(world.starting_room)
 
 # Fill this out with directions to walk
 # traversal_path = ['n', 'n']
-traversal_path = []
 
 p = Pathfinder(player)
-print("wander ", p.wander())
-
+traversal_path = p.wander()
 # start pathfinding at starting room
 
 
