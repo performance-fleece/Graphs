@@ -75,12 +75,12 @@ class Pathfinder:
 
     def find_last_unknown(self, path, traversal):
         prev_traversal = traversal
-        print("prev traversal ", prev_traversal)
         new_traversal = []
-        print(path)
+
         s = Stack()
         for room in path:
             s.push(room)
+
         while s.size() > 0:
             check_room = s.pop()
             print(check_room)
