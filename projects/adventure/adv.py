@@ -9,6 +9,23 @@ import random
 from ast import literal_eval
 
 
+class Stack():
+    def __init__(self):
+        self.stack = []
+
+    def push(self, value):
+        self.stack.append(value)
+
+    def pop(self):
+        if self.size() > 0:
+            return self.stack.pop()
+        else:
+            return None
+
+    def size(self):
+        return len(self.stack)
+
+
 class Queue():
     def __init__(self):
         self.queue = []
@@ -35,6 +52,9 @@ class Pathfinder:
         self.starting_room = player.current_room
         self.rooms = {}
 
+    def __str__(self):
+        return f"{self.rooms}"
+
     def add_room(self, room_id):
         self.rooms[room_id] = dict()
 
@@ -45,13 +65,28 @@ class Pathfinder:
         return self.rooms[room_id]
 
     '''
-    helper function - returns first exit without a room on the other end 
+    helper function - returns first exit without a room on the other end
     '''
 
     def unknown_exits(self, curr_room):
         for direction in self.rooms[curr_room]:
             if self.rooms[curr_room][direction] == '?':
                 return direction
+
+    def find_last_unknown(self, path, traversal):
+        prev_traversal = traversal
+        print("prev traversal ", prev_traversal)
+        new_traversal = []
+        print(path)
+        s = Stack()
+        for room in path:
+            s.push(room)
+        while s.size() > 0:
+            check_room = s.pop()
+            print(check_room)
+            next_exit = self.unknown_exits(check_room)
+            if next_exit is not None:
+                new_traversal.append(next_exit)
 
     def wander(self):
         q = Queue()
@@ -79,7 +114,6 @@ class Pathfinder:
                         self.add_exit(curr_room, pot_exit, '?')
 
             if prev_room is not None:
-                print("prev_direction ", prev_direction)
                 add_direction = ''
                 if prev_direction == 'n':
                     add_direction = 's'
@@ -94,7 +128,6 @@ class Pathfinder:
             # decide next move
             # are there exits with unknown destinations
             next_exit = self.unknown_exits(curr_room)
-            print('next_exit ', next_exit)
             if next_exit is not None:
                 traversal.append(next_exit)
                 # move player object to next room
@@ -107,20 +140,13 @@ class Pathfinder:
                 next_path = curr_path.copy()
                 next_path.append(next_room)
                 q.enqueue(next_path)
-        return traversal
 
-        # for direction in self.rooms[curr_room]:
-        #     if self.rooms[curr_room][direction] == '?':
-        #         self.player.travel(direction)
-        #         print('player moved to', self.player.current_room)
-        #         traversal.append(direction)
-        #         print("traversal path: ", traversal)
-        #         q.enqueue(self.player.current_room)
-        #         new_path = path.copy()
-        #         new_path.append(self.player.current_room)
-        #         break
-        # print("final traversal ", traversal)
-        # choose exit
+            if next_exit == None:
+                self.find_last_unknown(curr_path[:-1], traversal)
+
+            # end of direct path, search backwards to find unknown directions
+
+        return traversal
 
 
 # Load world
@@ -128,8 +154,8 @@ world = World()
 
 
 # You may uncomment the smaller graphs for development and testing purposes.
-map_file = "maps/test_line.txt"
-# map_file = "maps/test_cross.txt"
+# map_file = "maps/test_line.txt"
+map_file = "maps/test_cross.txt"
 # map_file = "maps/test_loop.txt"
 # map_file = "maps/test_loop_fork.txt"
 # map_file = "maps/main_maze.txt"
